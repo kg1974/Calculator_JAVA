@@ -1,5 +1,4 @@
 package Calculator;
-
 import java.util.Scanner;
 
 public class Main {
@@ -15,11 +14,35 @@ public class Main {
             return value;
         }
     }
+    
+    static int findOperatorIndex(String input) throws IllegalArgumentException {
+        for (int i = 0; i < input.length(); i++) {
+            char ch = input.charAt(i);
+            if (ch == '+' || ch == '-' || ch == '*' || ch == '/') {
+                return i;
+            }
+        }
+        throw new IllegalArgumentException("Ошибка: Некорректное выражение.");
+    }
+    
+    static int parseNumber(String str) throws IllegalArgumentException {
+        try {
+            return Integer.parseInt(str);
+        } catch (NumberFormatException e) {
+            // Попробуем распознать римское число
+            try {
+                return RomanNumeral.valueOf(str).getValue();
+            } catch (IllegalArgumentException ex) {
+                throw new IllegalArgumentException("Ошибка: Неверное число.");
+            }
+        }
+    }
+    
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Введите арифметическое выражение: ");
+        System.out.println("Программа Калькулятор ");
         System.out.println("Введите exit для выхода.");
-
+        
         while (true) {
             System.out.println("Введите арифметическое выражение: ");
             String input = scanner.nextLine();
@@ -27,53 +50,53 @@ public class Main {
                 System.out.println("Программа завершается");
                 break;
             }
-
-            char[] tokens = input.toCharArray();
-            if (tokens.length != 3) {
-                System.out.println("Неккоректно введено: введите в одну строку!");
-                continue;
-            }
-
+            
             try {
-                int num1 = parseNumber(tokens[0]);
-                char operator = tokens[1];
-                int num2 = parseNumber(tokens[2]);
-
+                // Находим индекс первого символа оператора
+                int operatorIndex = findOperatorIndex(input);
+                if (operatorIndex == -1 || operatorIndex == 0 || operatorIndex == input.length() - 1) {
+                    throw new IllegalArgumentException("Ошибка: Некорректное выражение.");
+                }
+                
+                String leftOperand = input.substring(0, operatorIndex).trim();
+                String operator = input.substring(operatorIndex, operatorIndex + 1);
+                String rightOperand = input.substring(operatorIndex + 1).trim();
+                
+                // Преобразуем операнды в числа
+                int num1 = parseNumber(leftOperand);
+                int num2 = parseNumber(rightOperand);
+                
+                // Выполняем операцию и выводим результат
                 int result;
                 switch (operator) {
-                    case '+':
+                    case "+":
                         result = num1 + num2;
                         break;
-                    case '-':
+                    case "-":
                         result = num1 - num2;
                         break;
-                    case '*':
+                    case "*":
                         result = num1 * num2;
                         break;
-                    case '/':
+                    case "/":
+                        if (num2 == 0) {
+                            throw new ArithmeticException("Деление на ноль!");
+                        }
                         result = num1 / num2;
                         break;
                     default:
-                        throw new IllegalArgumentException("Error: Invalid operator.");
+                        throw new IllegalArgumentException("Ошибка: Неверная операция.");
                 }
-
-                System.out.println("Result: " + result);
-
+                
+                System.out.println("Результат: " + result);
+                
             } catch (NumberFormatException e) {
-                System.out.println("Error: Invalid numbers entered.");
-            } catch (IllegalArgumentException e) {
-                System.out.println(e.getMessage());
+                System.out.println("Ошибка: Введены некорректные числа.");
+            } catch (IllegalArgumentException | ArithmeticException e) {
+                System.out.println("Ошибка: " + e.getMessage());
             }
         }
-
+        
         scanner.close();
-    }
-
-    static int parseNumber(char c) {
-        if (Character.isDigit(c)) {
-            return Character.getNumericValue(c);
-        } else {
-            throw new IllegalArgumentException("Error: Invalid number.");
-        }
     }
 }
